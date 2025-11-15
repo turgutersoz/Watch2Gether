@@ -94,4 +94,6 @@ volumes:
 networks:
   watch-together-network:
     driver: bridge
+  coolify:
+    external: true  # Coolify'ın network'ünü kullan
 

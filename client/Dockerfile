@@ -19,11 +19,17 @@ COPY client/ .
 # Build application (TypeScript compile + Vite build)
 RUN npm run build
 
+# Debug: Build çıktısını kontrol et
+RUN ls -la /app/dist || echo "Build failed - dist directory not found"
+
 # Production stage
 FROM nginx:alpine
 
 # Copy built files from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Debug: Kopyalanan dosyaları kontrol et
+RUN ls -la /usr/share/nginx/html || echo "Files not copied"
 
 # Copy nginx configuration
 COPY client/nginx.conf /etc/nginx/conf.d/default.conf
