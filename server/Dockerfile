@@ -8,7 +8,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+# npm ci yerine npm install kullanıyoruz (package-lock.json güncel olmayabilir)
+RUN npm install --only=production
 
 # Copy application files
 COPY . .
