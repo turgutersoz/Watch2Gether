@@ -119,6 +119,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 
 # Socket.io Server URL
 VITE_SOCKET_IO_URL=http://localhost:3001
+# ⚠️ ÖNEMLİ: Server'ın adresini yazın (Socket.io server'ına bağlanır), client'ın adresini değil!
 ```
 
 **Not:** 
@@ -244,6 +245,9 @@ CORS_ORIGINS=https://yourdomain.com,https://api.yourdomain.com
 
 # Client Environment
 VITE_SOCKET_IO_URL=https://api.yourdomain.com
+# ⚠️ ÖNEMLİ: Server'ın adresini yazın (Socket.io server'ına bağlanır), client'ın adresini değil!
+# Örnek: Client: https://app.yourdomain.com → Server: https://api.yourdomain.com
+# Bu değişkene server adresini yazın: https://api.yourdomain.com
 ```
 
 **Not:** Docker Compose içinde `POSTGRES_HOST` otomatik olarak `postgres-db` servis adına ayarlanır.

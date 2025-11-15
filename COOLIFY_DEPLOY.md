@@ -261,7 +261,124 @@ cd watch-together
 
 ## 🎯 Coolify'da Proje Oluşturma
 
-### Yöntem 1: Docker Compose ile (Önerilen)
+### Yöntem 1: Native Deployment (Önerilen - Docker Compose Olmadan)
+
+Coolify'ın native deployment özelliğini kullanarak her servisi ayrı ayrı deploy edebilirsiniz. Bu yöntem daha basit ve Coolify'ın otomatik build özelliklerinden yararlanır.
+
+#### Adım 1: Client (React) Resource Oluştur
+
+**Seçenek A: Static Site (Önerilen - Production için)**
+
+⚠️ **ÖNEMLİ:** Coolify Static Site otomatik Dockerfile oluştururken build context **root dizin** oluyor. Bu yüzden Root Directory boş bırakılmalı.
+
+1. Coolify Dashboard'da **"New Resource"** > **"Static Site"** seçin
+2. **"From Public Repository"** veya **"From Private Repository"** seçin
+3. **Repository URL**: 
+   - Public repo için: `https://github.com/YOUR_USERNAME/ReactWatchTogether`
+   - Private repo için: `git@github.com:YOUR_USERNAME/ReactWatchTogether.git` (SSH key gerekir)
+4. **Branch**: `main`
+5. **"Root Directory"**: (boş bırakın) ⚠️ **ÖNEMLİ:** Root Directory boş olmalı
+6. **"Build Command"**: `cd client && npm install && npm run build`
+7. **"Publish Directory"**: `client/dist` (Root Directory boş olduğu için tam path gerekli)
+8. **"Save"** butonuna tıklayın
+
+**Neden Root Directory Boş?**
+- Coolify Static Site otomatik Dockerfile oluştururken build context **root dizin** oluyor
+- Build stage root dizinde çalışıyor, bu yüzden `cd client && npm run build` yapmalıyız
+- Build output `client/dist` oluyor, bu yüzden **Publish Directory** `client/dist` olmalı
+- Root Directory `client` olduğunda, Coolify build context'i `client/` yapmaya çalışıyor ama otomatik Dockerfile'da build stage root dizinde çalışıyor ve `/app/client/dist` arıyor - bu path uyuşmazlığı hataya neden oluyor
+
+**Seçenek B: Application (Development/Testing için)**
+
+1. Coolify Dashboard'da **"New Resource"** > **"Application"** seçin
+2. **"From Public Repository"** veya **"From Private Repository"** seçin
+3. **Repository URL**: 
+   - Public repo için: `https://github.com/YOUR_USERNAME/ReactWatchTogether`
+   - Private repo için: `git@github.com:YOUR_USERNAME/ReactWatchTogether.git` (SSH key gerekir)
+4. **Branch**: `main`
+5. **"Build Pack"**: Coolify otomatik olarak Vite/React'i algılar (Nixpacks)
+6. **"Root Directory"**: `client` (client klasörünü belirtin)
+7. **"Port"**: `5173` (Vite default port, Coolify otomatik yönlendirir)
+8. **"Build Command"**: `npm run build` (otomatik algılanır)
+9. **"Start Command"**: `npm run preview -- --host 0.0.0.0 --port 5173`
+10. **"Publish Directory"**: `dist` (Vite build çıktısı)
+11. **"Save"** butonuna tıklayın
+
+**Önemli Not:** Production için **Static Site** kullanmanız önerilir çünkü:
+- Nginx otomatik olarak serve eder (daha hızlı)
+- Vite preview server production için optimize edilmemiştir
+- Static site daha az kaynak kullanır
+
+
+#### Adım 2: Server (Node.js) Resource Oluştur
+
+1. Coolify Dashboard'da **"New Resource"** > **"Application"** seçin
+2. **"From Public Repository"** veya **"From Private Repository"** seçin
+3. Repository URL'ini girin: `https://github.com/YOUR_USERNAME/ReactWatchTogether`
+4. Branch: `main`
+5. **"Build Pack"**: Coolify otomatik olarak Node.js'i algılar (Nixpacks)
+6. **"Root Directory"**: `server` (server klasörünü belirtin)
+7. **"Port"**: `3001`
+8. **"Build Command"**: `npm install` (otomatik algılanır, build gerekmez)
+9. **"Start Command"**: `npm start` (otomatik algılanır)
+10. **"Save"** butonuna tıklayın
+
+#### Adım 3: Environment Variables Ekleme
+
+**Client Resource için:**
+1. Client resource'unuza gidin
+2. **"Environment Variables"** sekmesine tıklayın
+3. Şu değişkenleri ekleyin:
+   ```env
+   VITE_SOCKET_IO_URL=https://your-server-domain.com
+   # ⚠️ ÖNEMLİ: Server'ın adresini yazın, client'ın adresini değil!
+   # Örnek: Client: https://app.yourdomain.com → Server: https://api.yourdomain.com
+   # VITE_SOCKET_IO_URL=https://api.yourdomain.com (server adresi)
+   # Supabase kullanmıyorsanız bu değişkenleri eklemeyin
+   ```
+
+**Server Resource için:**
+1. Server resource'unuza gidin
+2. **"Environment Variables"** sekmesine tıklayın
+3. Şu değişkenleri ekleyin:
+   ```env
+   NODE_ENV=production
+   PORT=3001
+   DB_PROVIDER=postgres
+   POSTGRES_URL=postgres://postgres:password@database-host:5432/postgres
+   CORS_ORIGINS=https://your-client-domain.com,https://your-server-domain.com
+   ```
+
+#### Adım 4: Domain ve SSL Yapılandırması
+
+**Client için:**
+1. Client resource'unuza gidin
+2. **"Domains"** sekmesine tıklayın
+3. Domain ekleyin: `app.yourdomain.com`
+4. **"Generate SSL"** butonuna tıklayın
+
+**Server için:**
+1. Server resource'unuza gidin
+2. **"Domains"** sekmesine tıklayın
+3. Domain ekleyin: `api.yourdomain.com`
+4. **"Generate SSL"** butonuna tıklayın
+
+#### Avantajlar
+
+- ✅ Docker Compose yapılandırmasına gerek yok
+- ✅ Coolify otomatik build yapar (Nixpacks)
+- ✅ Her servis bağımsız olarak scale edilebilir
+- ✅ Daha basit yapılandırma
+- ✅ Coolify'ın otomatik SSL ve reverse proxy özelliklerinden yararlanır
+
+#### Dezavantajlar
+
+- ❌ Servisler arası network yapılandırması manuel (environment variables ile)
+- ❌ Docker Compose'daki `depends_on` gibi bağımlılık yönetimi yok
+
+---
+
+### Yöntem 2: Docker Compose ile (Alternatif)
 
 #### Adım 1: Yeni Resource Oluştur
 
@@ -439,6 +556,8 @@ CORS_ORIGINS=https://yourdomain.com,https://api.yourdomain.com
 
 # Client Environment (Coolify domain'lerinizi kullanın)
 VITE_SOCKET_IO_URL=https://api.yourdomain.com
+# ⚠️ ÖNEMLİ: Server'ın adresini yazın (Socket.io server'ına bağlanır), client'ın adresini değil!
+# Örnek: Client: https://app.yourdomain.com → Server: https://api.yourdomain.com
 
 # Server Configuration
 NODE_ENV=production
@@ -729,7 +848,45 @@ Coolify'da Docker Compose kullanıyorsanız, `docker-compose.yml` dosyası zaten
 3. SSH key ekleyin (SSH kullanıyorsanız)
 4. Repository'nin public olduğundan emin olun (public için)
 
-### Problem 2: Docker Compose Build Başarısız
+### Problem 2: Server Build Hatası - npm ci Package Lock Senkronizasyonu
+
+**Belirtiler:**
+```
+npm error `npm ci` can only install packages when your package.json and package-lock.json are in sync.
+npm error Missing: mysql2@3.15.3 from lock file
+npm error Missing: pg@8.16.3 from lock file
+```
+
+**Neden:**
+- `server/package.json`'a yeni paketler eklendi (`mysql2`, `pg`) ama `server/package-lock.json` güncellenmedi
+- Coolify Nixpacks `npm ci` kullanıyor ve lock file ile `package.json` senkronize olmalı
+
+**Çözüm:**
+
+1. Local'de `server` dizinine gidin:
+   ```bash
+   cd server
+   ```
+
+2. `npm install` çalıştırın (package-lock.json'ı günceller):
+   ```bash
+   npm install
+   ```
+
+3. Değişiklikleri commit edin ve push edin:
+   ```bash
+   git add server/package-lock.json
+   git commit -m "Update server package-lock.json for Coolify deployment"
+   git push
+   ```
+
+4. Coolify otomatik olarak yeniden deploy eder
+
+**Önleme:** 
+- Yeni paket eklediğinizde her zaman `npm install` çalıştırıp `package-lock.json`'ı commit edin
+- `package.json`'ı değiştirdiğinizde `package-lock.json`'ı da güncelleyin
+
+### Problem 3: Docker Compose Build Başarısız
 
 **Belirtiler:**
 - Build loglarında hata
@@ -745,7 +902,7 @@ Coolify'da Docker Compose kullanıyorsanız, `docker-compose.yml` dosyası zaten
    docker system df
    ```
 
-### Problem 3: Database Bağlantı Hatası
+### Problem 4: Database Bağlantı Hatası
 
 **Belirtiler:**
 - "Connection refused" hatası
@@ -760,7 +917,46 @@ Coolify'da Docker Compose kullanıyorsanız, `docker-compose.yml` dosyası zaten
 3. Network ayarlarını kontrol edin (aynı network'te olmalı)
 4. Database host adını kontrol edin (Coolify'de servis adı)
 
-### Problem 4: SSL Sertifikası Alınamıyor
+### Problem 4: Static Site Build Hatası - "/app/client/dist" Not Found
+
+**Belirtiler:**
+```
+ERROR: failed to calculate checksum of ref: "/app/client/dist": not found
+```
+
+**Neden:**
+- Coolify Static Site deployment'ında Root Directory `client` olarak ayarlandığında
+- Build context `client/` klasörü olur
+- Build command `npm run build` `client/` içinde çalışır ve `client/dist` oluşturur
+- Ama Coolify'ın Dockerfile'ı `/app/client/dist` arıyor (yanlış path)
+
+**Çözüm:**
+
+**Static Site ayarlarını düzeltin:**
+
+Coolify Static Site otomatik Dockerfile oluştururken build context **root dizin** oluyor. Bu yüzden:
+
+1. Coolify Dashboard'da Static Site resource'unuza gidin
+2. **"Settings"** > **"Build"** sekmesine tıklayın
+3. Ayarları şu şekilde yapın:
+   - **"Root Directory"**: (boş bırakın) ⚠️ **ÖNEMLİ**
+   - **"Build Command"**: `cd client && npm install && npm run build`
+   - **"Publish Directory"**: `client/dist` ✅
+4. **"Save"** butonuna tıklayın
+5. Yeniden deploy edin
+
+**Açıklama:**
+- Coolify Static Site build stage'inde build context **root dizin** oluyor
+- Bu yüzden Root Directory boş bırakılmalı
+- Build Command `cd client && npm run build` ile `client/` klasörüne girip build yapıyor
+- Build output `client/dist` oluyor, bu yüzden **Publish Directory** `client/dist` olmalı
+
+**Neden Root Directory `client` Çalışmıyor?**
+- Root Directory `client` olduğunda, Coolify build context'i `client/` yapmaya çalışıyor
+- Ama otomatik Dockerfile'da build stage root dizinde çalışıyor ve `/app/client/dist` arıyor
+- Bu path uyuşmazlığı hataya neden oluyor
+
+### Problem 5: SSL Sertifikası Alınamıyor
 
 **Belirtiler:**
 - SSL hatası
