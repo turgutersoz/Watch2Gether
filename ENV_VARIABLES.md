@@ -42,13 +42,32 @@ VITE_SOCKET_IO_URL=https://your-socketio-server.railway.app
 `server/.env` dosyası oluşturun (opsiyonel):
 
 ```env
-# Supabase Configuration (Opsiyonel)
+# Database Provider (supabase, mysql, postgres veya postgresql)
+DB_PROVIDER=supabase
+
+# Supabase Configuration (DB_PROVIDER=supabase olduğunda)
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# PostgreSQL Configuration (DB_PROVIDER=postgres olduğunda)
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_USER=watchtogether
+POSTGRES_PASSWORD=watchtogether123
+POSTGRES_DATABASE=watch_together
+POSTGRES_SSL=false
+
+# MySQL Configuration (DB_PROVIDER=mysql olduğunda)
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_USER=watchtogether
+MYSQL_PASSWORD=watchtogether123
+MYSQL_DATABASE=watch_together
 
 # Server Configuration
 PORT=3001
 NODE_ENV=development
+CORS_ORIGINS=http://localhost,https://localhost,http://localhost:5173
 ```
 
 ### Production (Railway/Render/Fly.io)
@@ -56,13 +75,32 @@ NODE_ENV=development
 Deployment platformunuzun environment variables bölümüne ekleyin:
 
 ```env
-# Supabase Configuration
+# Database Provider (supabase, mysql, postgres veya postgresql)
+DB_PROVIDER=postgres
+
+# Supabase Configuration (DB_PROVIDER=supabase olduğunda)
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# PostgreSQL Configuration (DB_PROVIDER=postgres olduğunda)
+POSTGRES_HOST=postgres-db
+POSTGRES_PORT=5432
+POSTGRES_USER=watchtogether
+POSTGRES_PASSWORD=your-secure-password
+POSTGRES_DATABASE=watch_together
+POSTGRES_SSL=false
+
+# MySQL Configuration (DB_PROVIDER=mysql olduğunda)
+MYSQL_HOST=mysql-db
+MYSQL_PORT=3306
+MYSQL_USER=watchtogether
+MYSQL_PASSWORD=your-mysql-password
+MYSQL_DATABASE=watch_together
 
 # Server Configuration
 PORT=3001
 NODE_ENV=production
+CORS_ORIGINS=https://yourdomain.com,https://api.yourdomain.com
 ```
 
 ## 🔑 Supabase Keys Nasıl Alınır?

@@ -62,7 +62,7 @@ export async function saveRoomToSupabase(roomData) {
         is_public: roomData.isPublic || false,
         video_url: roomData.videoUrl || null,
         is_playing: roomData.isPlaying || false,
-        current_time: roomData.currentTime || 0,
+        "current_time": roomData.currentTime || 0,
         volume: roomData.volume || 1.0,
         current_playlist_index: roomData.currentPlaylistIndex || -1,
         stats: roomData.stats || {},

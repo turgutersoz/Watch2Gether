@@ -1,0 +1,53 @@
+version: '3.8'
+
+# Development Docker Compose
+# Hot reload ve development için optimize edilmiş
+
+services:
+  # Socket.io Server (Development)
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+    container_name: watch-together-server-dev
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - SUPABASE_URL=${SUPABASE_URL:-}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-}
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    command: npm run dev
+    restart: unless-stopped
+    networks:
+      - watch-together-network
+
+  # React Client (Development)
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.dev
+    container_name: watch-together-client-dev
+    environment:
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL:-}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY:-}
+      - VITE_SOCKET_IO_URL=${VITE_SOCKET_IO_URL:-http://localhost:3001}
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    command: npm run dev
+    restart: unless-stopped
+    depends_on:
+      - server
+    networks:
+      - watch-together-network
+
+networks:
+  watch-together-network:
+    driver: bridge
+

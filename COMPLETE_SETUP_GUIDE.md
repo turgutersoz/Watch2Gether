@@ -115,6 +115,10 @@ npm run dev
 2. "New query" butonuna tıklayın
 3. Aşağıdaki SQL script'ini yapıştırın:
 
+**⚠️ ÖNEMLİ:** `current_time` PostgreSQL'de reserved keyword olduğu için tırnak içine alınmıştır (`"current_time"`). Bu hatayı önlemek için gereklidir.
+
+**Alternatif:** `SUPABASE_SCHEMA_FIXED.sql` dosyasını (proje root'unda) kullanabilirsiniz.
+
 ```sql
 -- Kullanıcılar tablosu (Auth ile entegre)
 CREATE TABLE IF NOT EXISTS users (
@@ -142,7 +146,7 @@ CREATE TABLE IF NOT EXISTS rooms (
   is_public BOOLEAN DEFAULT false,
   video_url TEXT,
   is_playing BOOLEAN DEFAULT false,
-  current_time NUMERIC DEFAULT 0,
+  "current_time" NUMERIC DEFAULT 0,
   volume NUMERIC DEFAULT 1.0,
   current_playlist_index INTEGER DEFAULT -1,
   stats JSONB DEFAULT '{"totalViews": 0, "totalMessages": 0, "totalVideos": 0}',

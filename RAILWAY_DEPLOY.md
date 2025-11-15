@@ -111,6 +111,31 @@ Railway'in ücretsiz tier'ı:
 
 ## 🐛 Sorun Giderme
 
+### Problem: npm ci Hatası - Package Lock Senkronizasyonu
+
+**Belirtiler:**
+```
+npm error `npm ci` can only install packages when your package.json and package-lock.json are in sync.
+npm error Missing: @supabase/supabase-js@2.81.1 from lock file
+```
+
+**Çözüm:**
+1. Local'de `server` dizinine gidin
+2. `npm install` çalıştırın (package-lock.json'ı günceller)
+3. Değişiklikleri commit edin ve push edin:
+   ```bash
+   git add server/package-lock.json
+   git commit -m "Update package-lock.json for Railway deployment"
+   git push
+   ```
+4. Railway otomatik olarak yeniden deploy eder
+
+**Önleme:** Yeni paket eklediğinizde her zaman `npm install` çalıştırıp `package-lock.json`'ı commit edin.
+
+---
+
+## 🐛 Sorun Giderme (Devam)
+
 ### Deployment Başarısız
 
 **Hata:** Build başarısız oluyor

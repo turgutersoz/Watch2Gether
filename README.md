@@ -50,7 +50,9 @@ Watch2Gether benzeri, gerçek zamanlı senkronize video izleme platformu. Arkada
 - Node.js
 - Express
 - Socket.io
-- Supabase (Database & Auth)
+- Supabase (Database & Auth - Opsiyonel)
+- PostgreSQL (Standalone - Opsiyonel)
+- MySQL (Alternatif - Opsiyonel)
 - UUID (Oda ID oluşturma)
 
 ## 📦 Kurulum
@@ -160,16 +162,49 @@ Detaylı kurulum için `SUPABASE_AUTH_SETUP.md` dosyasına bakın.
 
 **Yeni başlayanlar için:** `COMPLETE_SETUP_GUIDE.md` dosyasını takip edin. Bu rehber sıfırdan production'a kadar tüm adımları içerir.
 
+### 🐳 Docker Deployment
+
+**Hızlı başlangıç için:** `DOCKER_SETUP.md` dosyasını takip edin. Docker ile tek komutla tüm servisleri çalıştırabilirsiniz.
+
+```bash
+# Production (Traefik ile)
+docker compose up -d --build
+
+# Development (hot reload)
+docker compose -f docker-compose.dev.yml up --build
+
+# Erişim:
+# - Client: http://localhost veya https://localhost
+# - Server API: http://api.localhost veya https://api.localhost
+# - Traefik Dashboard: http://localhost:8080
+```
+
 ### Detaylı Rehberler
 
 - `COMPLETE_SETUP_GUIDE.md` - ⭐ **Uçtan uca kurulum rehberi (ÖNERİLEN)**
+- `DOCKER_SETUP.md` - 🐳 **Docker entegrasyonu (ÖNERİLEN)**
+- `DOCKER_PRODUCTION.md` - 🐳 **Docker production deployment (ÖNERİLEN)**
+- `COOLIFY_DEPLOY.md` - 🚀 **Coolify deployment (ÖNERİLEN)**
+- `TRAEFIK_SETUP.md` - 🔀 **Traefik v1 reverse proxy (ÖNERİLEN)**
+- `MYSQL_SETUP.md` - 🗄️ **MySQL veritabanı kurulumu (ÖNERİLEN)**
 - `DEPLOYMENT_SUMMARY.md` - Genel bakış
 - `SUPABASE_AUTH_SETUP.md` - Supabase Auth kurulumu
-- `SUPABASE_VERCEL_SETUP.md` - Vercel + Supabase kurulumu
+- `SUPABASE_VERCEL_SETUP.md` - Vercel + Supabase entegrasyonu
 - `RAILWAY_DEPLOY.md` - Socket.io server deployment
 - `ENV_VARIABLES.md` - Environment variables
 
 ### Hızlı Deployment
+
+#### 🐳 Docker ile (Önerilen)
+
+1. **Supabase**: Proje oluştur ve schema'yı deploy et
+2. **Docker**: Tüm servisleri tek komutla deploy et
+   ```bash
+   docker compose up -d --build
+   ```
+   **Detaylı Rehber:** `DOCKER_PRODUCTION.md`
+
+#### 🚂 Railway ile (Alternatif)
 
 1. **Supabase**: Proje oluştur ve schema'yı deploy et
 2. **Railway**: Socket.io server'ı deploy et

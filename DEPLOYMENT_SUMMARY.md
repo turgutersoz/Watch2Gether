@@ -1,6 +1,26 @@
-# 🚀 Vercel + Supabase Deployment Özeti
+# 🚀 Deployment Özeti - Watch Together
 
-## ✅ Sıkıntı Olur mu?
+## 🐳 Docker Deployment (Önerilen)
+
+**Docker ile tüm servisleri tek sunucuda çalıştırabilirsiniz!**
+
+**Avantajlar:**
+- ✅ Tek komutla deployment
+- ✅ Traefik ile SSL/HTTPS
+- ✅ Self-hosted kontrol
+- ✅ Kolay scaling
+- ✅ Railway/Vercel'e gerek yok
+
+**Hızlı Başlangıç:**
+```bash
+docker compose up -d --build
+```
+
+**Detaylı Rehber:** `DOCKER_PRODUCTION.md`
+
+---
+
+## ☁️ Vercel + Supabase Deployment (Alternatif)
 
 **HAYIR!** Vercel + Supabase kombinasyonu **mükemmel çalışır** ve yaygın olarak kullanılır. Tek dikkat edilmesi gereken Socket.io server'ı ayrı bir platformda çalıştırmak.
 
@@ -12,14 +32,29 @@
 - [ ] API keys'leri kopyala
 - [ ] Auth ayarlarını yapılandır
 
-### 2. Socket.io Server Deployment (20 dakika)
+### 2. Socket.io Server Deployment
+
+#### Docker ile (Önerilen - 10 dakika)
+- [ ] Docker ve Docker Compose kurulu
+- [ ] `.env` dosyası oluştur
+- [ ] `docker compose up -d --build` çalıştır
+- [ ] Traefik ile SSL/HTTPS otomatik
+
+#### Railway ile (Alternatif - 20 dakika)
 - [ ] Railway.app'te hesap oluştur
 - [ ] GitHub repo'yu bağla
 - [ ] `server` klasörünü deploy et
 - [ ] Environment variables ekle
 - [ ] Public URL'yi al
 
-### 3. Vercel Deployment (10 dakika)
+### 3. Frontend Deployment
+
+#### Docker ile (Önerilen - Otomatik)
+- [ ] Docker Compose ile otomatik deploy edilir
+- [ ] Traefik ile SSL/HTTPS otomatik
+- [ ] Environment variables `.env` dosyasında
+
+#### Vercel ile (Alternatif - 10 dakika)
 - [ ] Vercel.com'da hesap oluştur
 - [ ] GitHub repo'yu bağla
 - [ ] `client` klasörünü deploy et
@@ -32,6 +67,40 @@
 - [ ] Production URL'leri ayarla
 
 ## 🏗️ Mimari
+
+### Docker Deployment (Önerilen)
+
+```
+┌─────────────────────────────────────────┐
+│         Docker Host (Sunucu)            │
+│                                         │
+│  ┌──────────┐  ┌──────────┐           │
+│  │ Traefik  │  │  Client  │           │
+│  │ (Proxy)  │  │ (Nginx)  │           │
+│  └────┬─────┘  └────┬──────┘           │
+│       │             │                  │
+│       └──────┬──────┘                  │
+│              │                          │
+│       ┌──────▼──────┐                  │
+│       │   Server    │                  │
+│       │ (Socket.io) │                  │
+│       └──────┬──────┘                  │
+│              │                          │
+│       ┌──────▼──────┐                  │
+│       │   MySQL     │ (Opsiyonel)      │
+│       │  Database   │                  │
+│       └─────────────┘                  │
+└─────────────────────────────────────────┘
+              │
+              ▼
+      ┌───────────────┐
+      │   Supabase    │ (External)
+      │ (Database +   │
+      │    Auth)      │
+      └───────────────┘
+```
+
+### Vercel + Railway Deployment (Alternatif)
 
 ```
 ┌─────────────────┐

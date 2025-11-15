@@ -3,6 +3,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
+import * as db from './database-provider.js';
 
 // Kullanıcı rengi oluştur (socket ID'den)
 function generateUserColor(socketId) {
@@ -22,9 +23,15 @@ function generateUserColor(socketId) {
 const app = express();
 const httpServer = createServer(app);
 
+// CORS origin'leri environment variable'dan al veya default kullan
+// Boşlukları trim et (örnek: "http://localhost, http://localhost:5173" formatı için)
+const allowedOrigins = process.env.CORS_ORIGINS 
+  ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim()).filter(origin => origin.length > 0)
+  : ["http://localhost:5173", "http://localhost", "https://localhost"];
+
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -1114,9 +1121,33 @@ app.get('/api/admin/stats', (req, res) => {
   });
 });
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Database bağlantısını test et
+const testDatabaseConnection = async () => {
+  const provider = db.getProvider();
+  console.log(`📊 Database Provider: ${provider.toUpperCase()}`);
+  
+  if (provider === 'mysql' || provider === 'supabase' || provider === 'postgres' || provider === 'postgresql') {
+    const result = await db.testConnection();
+    if (result.connected) {
+      console.log(`✅ ${provider.toUpperCase()} bağlantısı başarılı!`);
+    } else {
+      console.warn(`⚠️ ${provider.toUpperCase()} bağlantısı başarısız:`, result.error);
+      console.warn('⚠️ In-memory storage kullanılacak.');
+    }
+  } else {
+    console.warn('⚠️ Geçersiz database provider! In-memory storage kullanılacak.');
+  }
+};
+
 const PORT = process.env.PORT || 3001;
 
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, async () => {
   console.log(`🚀 Sunucu çalışıyor: http://localhost:${PORT}`);
+  await testDatabaseConnection();
 });
 
