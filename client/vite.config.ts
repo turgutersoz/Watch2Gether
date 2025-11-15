@@ -26,13 +26,7 @@ export default defineConfig({
       },
     },
     // Tree shaking için
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // Production'da console.log'ları kaldır
-        drop_debugger: true,
-      },
-    },
+    minify: 'esbuild', // terser yerine esbuild kullan (daha hızlı ve varsayılan)
     // Chunk size uyarıları
     chunkSizeWarningLimit: 1000,
   },
