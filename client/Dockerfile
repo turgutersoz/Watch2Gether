@@ -7,14 +7,14 @@ WORKDIR /app
 # Install build dependencies
 RUN apk add --no-cache python3 make g++
 
-# Copy package files
-COPY package*.json ./
+# Copy package files (build context root olduğu için client/ prefix'i gerekli)
+COPY client/package*.json ./
 
 # Install ALL dependencies (including devDependencies for TypeScript build)
 RUN npm install
 
-# Copy application files
-COPY . .
+# Copy application files (build context root olduğu için client/ prefix'i gerekli)
+COPY client/ .
 
 # Build application (TypeScript compile + Vite build)
 RUN npm run build
