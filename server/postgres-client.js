@@ -29,7 +29,7 @@ function parseConnectionString(connectionString) {
       database: url.pathname.slice(1) || 'postgres', // pathname'den baştaki / karakterini kaldır
       max: 20, // Connection pool size
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000
+      connectionTimeoutMillis: 10000 // Coolify network latency için artırıldı (2s -> 10s)
     };
 
     // SSL parametrelerini kontrol et
@@ -59,8 +59,13 @@ function getPostgresConfig() {
     if (parsedConfig) {
       return parsedConfig;
     }
-    // Parse başarısız olursa, connection string'i direkt kullan
-    return connectionString;
+    // Parse başarısız olursa, connection string ile birlikte timeout ayarlarını ekle
+    return {
+      connectionString: connectionString,
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000 // Coolify network latency için artırıldı
+    };
   }
 
   // Fallback: Ayrı environment variables
@@ -72,7 +77,7 @@ function getPostgresConfig() {
     database: process.env.POSTGRES_DATABASE || 'watch_together',
     max: 20, // Connection pool size
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 10000, // Coolify network latency için artırıldı (2s -> 10s)
     ssl: process.env.POSTGRES_SSL === 'true' ? { rejectUnauthorized: false } : false
   };
 }
@@ -91,7 +96,10 @@ if (hasConnectionString || hasSeparateVars) {
     // Eğer config bir string ise (connection string), direkt kullan
     // Değilse (object), Pool constructor'a geçir
     if (typeof postgresConfig === 'string') {
-      pool = new Pool({ connectionString: postgresConfig });
+      pool = new Pool({ 
+        connectionString: postgresConfig,
+        connectionTimeoutMillis: 10000 // Coolify network latency için
+      });
     } else {
       pool = new Pool(postgresConfig);
     }

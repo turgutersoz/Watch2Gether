@@ -1,5 +1,5 @@
 # Socket.io Server Dockerfile
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Working directory
 WORKDIR /app
