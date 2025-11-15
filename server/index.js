@@ -25,8 +25,14 @@ const httpServer = createServer(app);
 
 // CORS origin'leri environment variable'dan al veya default kullan
 // Boşlukları trim et (örnek: "http://localhost, http://localhost:5173" formatı için)
-const allowedOrigins = process.env.CORS_ORIGINS 
-  ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim()).filter(origin => origin.length > 0)
+// "*" özel değeri tüm origin'lere izin verir
+const corsOriginsEnv = process.env.CORS_ORIGINS?.trim();
+const allowAllOrigins = corsOriginsEnv === '*' || corsOriginsEnv === 'true';
+
+const allowedOrigins = allowAllOrigins
+  ? true // Socket.io için true = tüm origin'lere izin ver
+  : corsOriginsEnv
+  ? corsOriginsEnv.split(',').map(origin => origin.trim()).filter(origin => origin.length > 0)
   : ["http://localhost:5173", "http://localhost", "https://localhost"];
 
 const io = new Server(httpServer, {
@@ -37,7 +43,11 @@ const io = new Server(httpServer, {
   }
 });
 
-app.use(cors());
+// Express CORS middleware'i de yapılandır
+app.use(cors({
+  origin: allowAllOrigins ? true : allowedOrigins,
+  credentials: true
+}));
 app.use(express.json());
 
 // Oda verilerini saklamak için

@@ -346,7 +346,10 @@ Coolify'ın native deployment özelliğini kullanarak her servisi ayrı ayrı de
    PORT=3001
    DB_PROVIDER=postgres
    POSTGRES_URL=postgres://postgres:password@database-host:5432/postgres
-   CORS_ORIGINS=https://your-client-domain.com,https://your-server-domain.com
+   CORS_ORIGINS=*
+   # veya belirli domain'ler için:
+   # CORS_ORIGINS=https://your-client-domain.com,https://your-server-domain.com
+   # ⚠️ ÖNEMLİ: "*" tüm origin'lere izin verir (development için uygun, production'da belirli domain'ler kullanın)
    ```
 
 #### Adım 4: Domain ve SSL Yapılandırması
@@ -549,10 +552,11 @@ POSTGRES_DATABASE=watch_together
 POSTGRES_SSL=false
 
 # CORS Origins (Coolify domain'lerinizi ekleyin)
+# "*" tüm origin'lere izin verir (development için uygun)
+CORS_ORIGINS=*
+# veya belirli domain'ler için (production önerilen):
+# CORS_ORIGINS=https://yourdomain.com,https://api.yourdomain.com
 # Not: Boşluklar otomatik olarak temizlenir, virgülle ayırın
-CORS_ORIGINS=https://yourdomain.com,https://api.yourdomain.com
-# veya boşluklu format (otomatik trim edilir):
-# CORS_ORIGINS=https://yourdomain.com, https://api.yourdomain.com
 
 # Client Environment (Coolify domain'lerinizi kullanın)
 VITE_SOCKET_IO_URL=https://api.yourdomain.com
@@ -902,7 +906,51 @@ npm error Missing: pg@8.16.3 from lock file
    docker system df
    ```
 
-### Problem 4: Database Bağlantı Hatası
+### Problem 4: CORS Hatası - "No 'Access-Control-Allow-Origin' header"
+
+**Belirtiler:**
+```
+Access to XMLHttpRequest at 'http://server-domain/socket.io/...' from origin 'http://client-domain' 
+has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present
+```
+
+**Neden:**
+- `CORS_ORIGINS=*` verildiğinde, kod bunu `["*"]` array'ine çeviriyor
+- Socket.io ve Express CORS middleware'i `*` string'ini özel olarak handle etmiyor
+- Express CORS middleware'i yapılandırılmamış olabilir
+
+**Çözüm:**
+
+1. **Server Environment Variables'ı kontrol edin:**
+   - Coolify Dashboard'da server resource'unuza gidin
+   - **"Environment Variables"** sekmesine tıklayın
+   - `CORS_ORIGINS` değişkenini kontrol edin
+
+2. **`CORS_ORIGINS=*` kullanın (tüm origin'lere izin verir):**
+   ```env
+   CORS_ORIGINS=*
+   ```
+   ⚠️ **Not:** Kod güncellendi, artık `*` değeri doğru şekilde handle ediliyor.
+
+3. **Veya belirli domain'leri belirtin:**
+   ```env
+   CORS_ORIGINS=http://go84skkwo4g8sos0scc840k0.20.56.65.121.sslip.io,http://twk0ko4wk8kwgcs0g0cow4sk.20.56.65.121.sslip.io
+   ```
+
+4. **Server'ı yeniden deploy edin:**
+   - Environment variable'ı değiştirdikten sonra server'ı yeniden deploy edin
+   - Coolify otomatik olarak yeniden başlatır
+
+5. **Kod güncellemesi:**
+   - `server/index.js` dosyası güncellendi
+   - `CORS_ORIGINS=*` artık doğru şekilde `origin: true` olarak yorumlanıyor
+   - Express CORS middleware'i de yapılandırıldı
+
+**Önleme:**
+- Production'da `CORS_ORIGINS=*` yerine belirli domain'leri kullanın
+- Development için `*` kullanabilirsiniz
+
+### Problem 5: Database Bağlantı Hatası
 
 **Belirtiler:**
 - "Connection refused" hatası
