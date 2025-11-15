@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS rooms (
   is_public BOOLEAN DEFAULT FALSE,
   video_url TEXT DEFAULT NULL,
   is_playing BOOLEAN DEFAULT FALSE,
-  current_time NUMERIC(10, 2) DEFAULT 0,
+  "current_time" NUMERIC(10, 2) DEFAULT 0,
   volume NUMERIC(3, 2) DEFAULT 1.0,
   current_playlist_index INTEGER DEFAULT -1,
   stats JSONB DEFAULT '{}'::jsonb,

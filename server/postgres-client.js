@@ -142,7 +142,7 @@ export async function saveRoomToPostgres(roomData) {
     const query = `
       INSERT INTO rooms (
         id, host_id, password, name, description, max_users, category, 
-        tags, is_public, video_url, is_playing, current_time, volume, 
+        tags, is_public, video_url, is_playing, "current_time", volume, 
         current_playlist_index, stats, updated_at, created_at
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW(), COALESCE((SELECT created_at FROM rooms WHERE id = $1), NOW()))
       ON CONFLICT (id) DO UPDATE SET
@@ -156,7 +156,7 @@ export async function saveRoomToPostgres(roomData) {
         is_public = EXCLUDED.is_public,
         video_url = EXCLUDED.video_url,
         is_playing = EXCLUDED.is_playing,
-        current_time = EXCLUDED.current_time,
+        "current_time" = EXCLUDED."current_time",
         volume = EXCLUDED.volume,
         current_playlist_index = EXCLUDED.current_playlist_index,
         stats = EXCLUDED.stats,
