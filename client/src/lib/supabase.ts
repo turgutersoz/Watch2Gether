@@ -35,7 +35,7 @@ export async function testSupabaseConnection() {
   }
 
   try {
-    const { data, error } = await supabase.from('users').select('count').limit(1);
+    const { error } = await supabase.from('users').select('count').limit(1);
     if (error && error.code !== 'PGRST116') { // PGRST116 = table doesn't exist (normal)
       throw error;
     }

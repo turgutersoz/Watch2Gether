@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { User, Session, AuthError } from '@supabase/supabase-js';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
@@ -121,7 +121,7 @@ export function useAuth() {
           id: supabaseUser.id,
           username: newProfile.username,
           email: newProfile.email,
-          avatar: newProfile.avatar,
+          avatar: newProfile.avatar || undefined,
           color: newProfile.color,
           status: newProfile.status as 'online' | 'away' | 'busy',
           role: newProfile.role,

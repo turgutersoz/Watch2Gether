@@ -40,7 +40,7 @@ function ScreenShare({ onStreamChange }: ScreenShareProps) {
       setStream(null);
       setIsSharing(false);
       onStreamChange?.(null);
-      toast.info('Ekran paylaşımı durduruldu');
+      toast('Ekran paylaşımı durduruldu');
     }
   }, [stream, onStreamChange]);
 

@@ -30,7 +30,7 @@ function App() {
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   
   // Supabase Auth hook
-  const { user: authUser, loading: authLoading, signOut } = useAuth();
+  const { user: authUser, signOut } = useAuth();
   const isSupabaseAvailable = !!supabase;
 
   // Auth user değiştiğinde local user state'ini güncelle
@@ -264,7 +264,7 @@ function App() {
           onRegister={handleRegister}
           onSkip={() => {
             setShowAuth(false);
-            toast.info('Misafir olarak devam ediyorsunuz');
+            toast('Misafir olarak devam ediyorsunuz');
           }}
         />
       ) : roomId !== null ? (
