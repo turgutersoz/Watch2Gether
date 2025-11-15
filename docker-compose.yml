@@ -53,6 +53,20 @@ services:
     restart: unless-stopped
     networks:
       - watch-together-network
+    # Coolify Traefik Labels (Opsiyonel - Coolify otomatik ekleyebilir)
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.gzip.compress=true"
+      - "traefik.http.routers.http-0-server.entryPoints=http"
+      - "traefik.http.routers.http-0-server.middlewares=gzip"
+      - "traefik.http.routers.http-0-server.rule=Host(`${SERVER_DOMAIN:-api.localhost}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.http-0-server.service=http-0-server"
+      - "traefik.http.services.http-0-server.loadbalancer.server.port=3001"
+      - "traefik.http.routers.https-0-server.entryPoints=https"
+      - "traefik.http.routers.https-0-server.middlewares=gzip"
+      - "traefik.http.routers.https-0-server.rule=Host(`${SERVER_DOMAIN:-api.localhost}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.https-0-server.service=http-0-server"
+      - "traefik.http.routers.https-0-server.tls=true"
 
   # React Client
   client:
@@ -75,6 +89,23 @@ services:
     restart: unless-stopped
     networks:
       - watch-together-network
+    # Coolify Traefik Labels (Opsiyonel - Coolify otomatik ekleyebilir)
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.gzip.compress=true"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.routers.http-0-client.entryPoints=http"
+      - "traefik.http.routers.http-0-client.middlewares=gzip"
+      - "traefik.http.routers.http-0-client.rule=Host(`${CLIENT_DOMAIN:-localhost}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.http-0-client.service=http-0-client"
+      - "traefik.http.services.http-0-client.loadbalancer.server.port=80"
+      - "traefik.http.routers.https-0-client.entryPoints=https"
+      - "traefik.http.routers.https-0-client.middlewares=gzip"
+      - "traefik.http.routers.https-0-client.rule=Host(`${CLIENT_DOMAIN:-localhost}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.https-0-client.service=http-0-client"
+      - "traefik.http.routers.https-0-client.tls=true"
+    # Coolify Caddy Labels (Opsiyonel - Coolify otomatik ekleyebilir)
+    # Caddy label'ları Coolify tarafından otomatik yönetilir, manuel eklemeye gerek yok
 
 volumes:
   postgres-data:

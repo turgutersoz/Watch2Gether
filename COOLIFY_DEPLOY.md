@@ -417,6 +417,13 @@ docker exec -i watch-together-db psql -U watchtogether -d watch_together < /tmp/
 DB_PROVIDER=postgres
 
 # PostgreSQL Configuration
+# Yöntem 1: Connection String (Önerilen - Tek satır, Coolify'dan kopyalayabilirsiniz)
+POSTGRES_URL=postgres://watchtogether:your-secure-password-here@postgres-db:5432/watch_together
+# veya
+DATABASE_URL=postgres://watchtogether:your-secure-password-here@postgres-db:5432/watch_together
+
+# Yöntem 2: Ayrı Değişkenler (Alternatif)
+# Not: POSTGRES_URL veya DATABASE_URL varsa bu değişkenler kullanılmaz
 POSTGRES_HOST=postgres-db
 POSTGRES_PORT=5432
 POSTGRES_USER=watchtogether
@@ -440,7 +447,7 @@ PORT=3001
 
 **Not:** 
 - ✅ **Sadece PostgreSQL kullanılıyor** - Supabase yok
-- ✅ Traefik environment variables'ına gerek yok (Coolify kendi reverse proxy'sini sağlıyor)
+- ✅ Traefik/Caddy label'ları `docker-compose.yml`'de mevcut (Coolify otomatik ekleyebilir)
 - ✅ Domain'ler Coolify Dashboard'dan yönetilir
 - ✅ SSL/HTTPS Coolify tarafından otomatik sağlanır
 
@@ -486,6 +493,94 @@ Hassas bilgiler için:
 1. **"Health Checks"** sekmesine tıklayın
 2. Health check sonuçlarını görün
 3. Başarısız olanları kontrol edin
+
+---
+
+## 🏷️ Traefik/Caddy Labels (Coolify Reverse Proxy)
+
+Coolify, Traefik veya Caddy kullanarak reverse proxy sağlar. `docker-compose.yml` dosyasında label'lar zaten tanımlıdır, ancak Coolify bunları otomatik olarak da ekleyebilir.
+
+### Traefik Labels
+
+`docker-compose.yml` dosyasında her servis için Traefik label'ları mevcuttur:
+
+**Client Service:**
+```yaml
+labels:
+  - "traefik.enable=true"
+  - "traefik.http.middlewares.gzip.compress=true"
+  - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+  - "traefik.http.routers.http-0-client.entryPoints=http"
+  - "traefik.http.routers.http-0-client.middlewares=gzip"
+  - "traefik.http.routers.http-0-client.rule=Host(`yourdomain.com`) && PathPrefix(`/`)"
+  - "traefik.http.services.http-0-client.loadbalancer.server.port=80"
+  - "traefik.http.routers.https-0-client.entryPoints=https"
+  - "traefik.http.routers.https-0-client.tls=true"
+```
+
+**Server Service:**
+```yaml
+labels:
+  - "traefik.enable=true"
+  - "traefik.http.middlewares.gzip.compress=true"
+  - "traefik.http.routers.http-0-server.entryPoints=http"
+  - "traefik.http.routers.http-0-server.rule=Host(`api.yourdomain.com`) && PathPrefix(`/`)"
+  - "traefik.http.services.http-0-server.loadbalancer.server.port=3001"
+  - "traefik.http.routers.https-0-server.entryPoints=https"
+  - "traefik.http.routers.https-0-server.tls=true"
+```
+
+### Caddy Labels
+
+Coolify Caddy kullanıyorsa, Caddy label'ları otomatik olarak eklenir:
+
+```yaml
+# Coolify tarafından otomatik eklenir
+caddy_0.encode=zstd gzip
+caddy_0.handle_path.0_reverse_proxy={{upstreams 80}}
+caddy_0.handle_path=/*
+caddy_0.header=-Server
+caddy_0.try_files={path} /index.html
+caddy_0=http://yourdomain.com
+caddy_ingress_network=coolify
+```
+
+### Önemli Notlar
+
+1. **Coolify Otomatik Yönetim:**
+   - Coolify, domain'ler eklendiğinde label'ları otomatik olarak ekleyebilir
+   - Manuel label eklemek isterseniz `docker-compose.yml`'deki label'ları kullanabilirsiniz
+   - Coolify Dashboard'dan domain eklediğinizde label'lar otomatik güncellenir
+
+2. **Port Yapılandırması:**
+   - Client: Port `80` (Nginx)
+   - Server: Port `3001` (Node.js)
+   - Bu portlar `expose` bölümünde tanımlıdır
+
+3. **Gzip Compression:**
+   - Traefik label'larında `gzip` middleware aktif
+   - Caddy'de `zstd gzip` encoding aktif
+   - Performans için önerilir
+
+4. **HTTPS Redirect:**
+   - Traefik'te `redirect-to-https` middleware mevcut
+   - Caddy otomatik olarak HTTPS yönlendirmesi yapar
+
+5. **SPA Routing:**
+   - Client için `try_files` Caddy label'ı mevcut
+   - React Router için gerekli
+
+### Label'ları Güncelleme
+
+Eğer Coolify'da label'ları manuel olarak güncellemek isterseniz:
+
+1. **Coolify Dashboard** > Projeniz > **"Configuration"** sekmesine gidin
+2. **"Labels"** bölümüne tıklayın
+3. Label'ları ekleyin veya düzenleyin
+4. **"Save"** butonuna tıklayın
+5. Projeyi yeniden deploy edin
+
+**Veya** `docker-compose.yml` dosyasındaki label'ları düzenleyip Git'e push edin.
 
 ---
 

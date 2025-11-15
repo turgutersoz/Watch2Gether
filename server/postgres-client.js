@@ -8,24 +8,93 @@
 import pg from 'pg';
 const { Pool } = pg;
 
-const postgresConfig = {
-  host: process.env.POSTGRES_HOST || 'localhost',
-  port: parseInt(process.env.POSTGRES_PORT || '5432'),
-  user: process.env.POSTGRES_USER || 'postgres',
-  password: process.env.POSTGRES_PASSWORD || '',
-  database: process.env.POSTGRES_DATABASE || 'watch_together',
-  max: 20, // Connection pool size
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-  ssl: process.env.POSTGRES_SSL === 'true' ? { rejectUnauthorized: false } : false
-};
+/**
+ * PostgreSQL connection string'ini parse et
+ * Format: postgres://username:password@host:port/database
+ */
+function parseConnectionString(connectionString) {
+  try {
+    const url = new URL(connectionString);
+    
+  // postgres:// veya postgresql:// prefix'lerini destekle
+    if (url.protocol !== 'postgres:' && url.protocol !== 'postgresql:') {
+      throw new Error('Invalid PostgreSQL connection string protocol');
+    }
+
+    const config = {
+      host: url.hostname,
+      port: parseInt(url.port || '5432'),
+      user: url.username || 'postgres',
+      password: url.password || '',
+      database: url.pathname.slice(1) || 'postgres', // pathname'den baştaki / karakterini kaldır
+      max: 20, // Connection pool size
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 2000
+    };
+
+    // SSL parametrelerini kontrol et
+    const sslParam = url.searchParams.get('ssl');
+    if (sslParam === 'true' || sslParam === '1' || url.searchParams.has('sslmode')) {
+      config.ssl = { rejectUnauthorized: false };
+    } else {
+      config.ssl = false;
+    }
+
+    return config;
+  } catch (error) {
+    console.error('PostgreSQL connection string parse error:', error);
+    return null;
+  }
+}
+
+/**
+ * PostgreSQL yapılandırmasını oluştur
+ */
+function getPostgresConfig() {
+  // Öncelik: POSTGRES_URL veya DATABASE_URL (connection string)
+  const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+  
+  if (connectionString) {
+    const parsedConfig = parseConnectionString(connectionString);
+    if (parsedConfig) {
+      return parsedConfig;
+    }
+    // Parse başarısız olursa, connection string'i direkt kullan
+    return connectionString;
+  }
+
+  // Fallback: Ayrı environment variables
+  return {
+    host: process.env.POSTGRES_HOST || 'localhost',
+    port: parseInt(process.env.POSTGRES_PORT || '5432'),
+    user: process.env.POSTGRES_USER || 'postgres',
+    password: process.env.POSTGRES_PASSWORD || '',
+    database: process.env.POSTGRES_DATABASE || 'watch_together',
+    max: 20, // Connection pool size
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+    ssl: process.env.POSTGRES_SSL === 'true' ? { rejectUnauthorized: false } : false
+  };
+}
+
+const postgresConfig = getPostgresConfig();
 
 // Connection pool oluştur
 let pool = null;
 
-if (process.env.POSTGRES_HOST && process.env.POSTGRES_DATABASE) {
+// Connection string veya ayrı değişkenler kontrolü
+const hasConnectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+const hasSeparateVars = process.env.POSTGRES_HOST && process.env.POSTGRES_DATABASE;
+
+if (hasConnectionString || hasSeparateVars) {
   try {
-    pool = new Pool(postgresConfig);
+    // Eğer config bir string ise (connection string), direkt kullan
+    // Değilse (object), Pool constructor'a geçir
+    if (typeof postgresConfig === 'string') {
+      pool = new Pool({ connectionString: postgresConfig });
+    } else {
+      pool = new Pool(postgresConfig);
+    }
     console.log('✅ PostgreSQL connection pool oluşturuldu');
     
     // Connection error handling
