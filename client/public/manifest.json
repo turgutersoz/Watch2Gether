@@ -1,0 +1,15 @@
+{
+  "name": "Watch Together",
+  "short_name": "WatchTogether",
+  "description": "Senkronize video izleme platformu",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f23",
+  "theme_color": "#7c3aed",
+  "orientation": "any",
+  "icons": [],
+  "categories": ["entertainment", "social"],
+  "screenshots": [],
+  "shortcuts": []
+}
+
