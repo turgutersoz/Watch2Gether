@@ -1145,9 +1145,10 @@ const testDatabaseConnection = async () => {
 };
 
 const PORT = process.env.PORT || 3001;
+const HOST = process.env.HOST || '0.0.0.0'; // Docker container'ları için 0.0.0.0 gerekli
 
-httpServer.listen(PORT, async () => {
-  console.log(`🚀 Sunucu çalışıyor: http://localhost:${PORT}`);
+httpServer.listen(PORT, HOST, async () => {
+  console.log(`🚀 Sunucu çalışıyor: http://${HOST}:${PORT}`);
   await testDatabaseConnection();
 });
 
