@@ -580,7 +580,7 @@ openssl s_client -connect yourdomain.com:443 -servername yourdomain.com
 
 ## 🐛 Sorun Giderme
 
-### Problem 0: Build Hatası - TypeScript Not Found
+### Problem 0: Build Hatası - TypeScript Not Found (Nixpacks)
 
 **Belirtiler:**
 ```
@@ -589,18 +589,38 @@ ERROR: process "/bin/bash -ol pipefail -c npm run build" did not complete succes
 ```
 
 **Neden:**
-- TypeScript `devDependencies`'de ve `npm ci` production modda devDependencies'i yüklemiyor
-- Build sırasında TypeScript compiler gerekli
+- Coolify Nixpacks kullanıyor ve root'tan build yapıyor
+- Root'ta `npm ci` çalışıyor ama `client` klasöründe dependencies yüklenmiyor
+- `npm run build` → `cd client && npm run build` çalışıyor ama `tsc` bulunamıyor
 
 **Çözüm:**
-1. Client Dockerfile'ında `npm ci` yerine `npm install` kullanıldığından emin olun
-2. TypeScript'in `devDependencies`'de olduğundan emin olun
-3. Build dependencies'in yüklendiğinden emin olun (python3, make, g++)
 
-**Not:** `docker-compose.yml` ve `client/Dockerfile` güncellenmiştir:
-- ✅ `npm install` kullanılıyor (devDependencies dahil)
-- ✅ Node.js 20-alpine kullanılıyor
-- ✅ Build dependencies eklendi (python3, make, g++)
+**Yöntem 1: Root package.json Güncelleme (Önerilen)**
+
+Root `package.json` dosyasını güncelleyin:
+
+```json
+{
+  "scripts": {
+    "build": "cd client && npm install && npm run build",
+    "postinstall": "cd client && npm install"
+  }
+}
+```
+
+Bu sayede:
+- `npm ci` çalıştığında `postinstall` otomatik olarak client dependencies'lerini yükler
+- `npm run build` çalıştığında client'ta dependencies hazır olur
+
+**Yöntem 2: Docker Compose Kullanma (Alternatif)**
+
+Coolify'da Docker Compose kullanıyorsanız, `docker-compose.yml` dosyası zaten doğru yapılandırılmıştır:
+- ✅ `client/Dockerfile` kullanılıyor
+- ✅ `npm install` ile devDependencies dahil yükleniyor
+
+**Not:** 
+- Docker Compose kullanıyorsanız, Nixpacks build'i atlanır
+- Sadece Git ile deploy ediyorsanız, Yöntem 1'i kullanın
 
 ### Problem 1: Repository Clone Edilemiyor
 
