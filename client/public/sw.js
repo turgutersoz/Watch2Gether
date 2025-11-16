@@ -3,8 +3,8 @@
  * Provides offline support and asset caching
  */
 
-const CACHE_NAME = 'watchtogether-v1';
-const RUNTIME_CACHE = 'watchtogether-runtime-v1';
+const CACHE_NAME = 'watchtogether-v2';
+const RUNTIME_CACHE = 'watchtogether-runtime-v2';
 
 // Assets to cache on install
 const STATIC_ASSETS = [
@@ -48,10 +48,17 @@ self.addEventListener('activate', (event) => {
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  const url = new URL(request.url);
-
+  
   // Skip non-GET requests
   if (request.method !== 'GET') {
+    return;
+  }
+
+  let url;
+  try {
+    url = new URL(request.url);
+  } catch (error) {
+    // Invalid URL, skip
     return;
   }
 
@@ -61,13 +68,15 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Skip unsupported schemes (chrome-extension, moz-extension, data, blob, etc.)
+  // Check BEFORE any cache operations
   const unsupportedSchemes = ['chrome-extension:', 'moz-extension:', 'data:', 'blob:', 'file:'];
   if (unsupportedSchemes.some(scheme => url.protocol.startsWith(scheme))) {
-    return; // Let the browser handle these requests normally
+    return; // Let the browser handle these requests normally - don't intercept
   }
 
-  // Only cache http/https requests
+  // Only cache http/https requests from same origin
   const isCacheableScheme = url.protocol === 'http:' || url.protocol === 'https:';
+  const isSameOrigin = url.origin === self.location.origin;
   
   // Skip external domains that might not be cacheable (optional - for Cloudflare, analytics, etc.)
   const skipExternalDomains = [
@@ -77,20 +86,36 @@ self.addEventListener('fetch', (event) => {
   ];
   const shouldSkipExternal = skipExternalDomains.some(domain => url.hostname.includes(domain));
 
+  // If not cacheable, just fetch normally without intercepting
+  if (!isCacheableScheme || !isSameOrigin || shouldSkipExternal) {
+    return; // Let browser handle normally
+  }
+
   // Cache strategy: Network first, fallback to cache
   event.respondWith(
     fetch(request)
       .then((response) => {
-        // Clone the response
-        const responseToCache = response.clone();
+        // Only cache successful responses
+        if (response.status === 200 && response.type === 'basic') {
+          // Clone the response before caching
+          const responseToCache = response.clone();
 
-        // Cache successful responses (only for cacheable schemes and not external domains)
-        if (response.status === 200 && isCacheableScheme && !shouldSkipExternal) {
+          // Cache in background (don't wait for it)
           caches.open(RUNTIME_CACHE).then((cache) => {
-            cache.put(request, responseToCache).catch((error) => {
-              // Silently fail if cache.put fails (e.g., for unsupported schemes)
-              console.warn('Cache put failed:', error);
-            });
+            // Double-check the request is cacheable before putting
+            try {
+              const requestUrl = new URL(request.url);
+              if (requestUrl.protocol === 'http:' || requestUrl.protocol === 'https:') {
+                cache.put(request, responseToCache).catch((error) => {
+                  // Silently fail if cache.put fails
+                  // This can happen for various reasons (CORS, unsupported schemes, etc.)
+                });
+              }
+            } catch (error) {
+              // Invalid URL or other error, skip caching
+            }
+          }).catch(() => {
+            // Cache open failed, ignore
           });
         }
 
