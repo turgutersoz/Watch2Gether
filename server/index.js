@@ -85,7 +85,7 @@ io.on('connection', (socket) => {
   console.log('Yeni kullanıcı bağlandı:', socket.id);
 
   // Oda oluştur
-  socket.on('create-room', (data) => {
+  socket.on('create-room', async (data) => {
     const roomId = uuidv4().substring(0, 8).toUpperCase();
     const { username, password } = data;
     
@@ -189,7 +189,7 @@ io.on('connection', (socket) => {
   });
 
   // Odaya katıl
-  socket.on('join-room', (data) => {
+  socket.on('join-room', async (data) => {
     const { roomId, username, password } = data;
     
     if (!roomId || roomId.trim() === '') {
