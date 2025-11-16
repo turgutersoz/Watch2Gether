@@ -56,8 +56,26 @@ const rooms = new Map();
 // Kullanıcı verilerini saklamak için
 const users = new Map();
 
-// Admin kullanıcılar (basit sistem - production'da database kullanılmalı)
-const adminUsers = new Set(['ADMIN']); // Örnek admin kullanıcı adları
+// Admin kullanıcılar
+// Yöntem 1: Environment variable'dan (virgülle ayrılmış liste)
+// Örnek: ADMIN_USERS=admin,ADMIN,superadmin
+const adminUsersEnv = process.env.ADMIN_USERS || 'ADMIN';
+const adminUsers = new Set(
+  adminUsersEnv.split(',').map(u => u.trim().toUpperCase()).filter(u => u.length > 0)
+);
+console.log('🔐 Admin kullanıcıları:', Array.from(adminUsers));
+
+// Yöntem 2: Database'den kontrol (opsiyonel - database'de role='admin' olanlar)
+async function getUserRoleFromDB(username) {
+  try {
+    // Database provider'dan kullanıcı rolünü al
+    // Şimdilik basit sistem kullanılıyor, ileride database entegrasyonu eklenebilir
+    return null; // null dönerse username kontrolü yapılır
+  } catch (error) {
+    console.error('Database role check error:', error);
+    return null;
+  }
+}
 
 // Kullanıcı istatistikleri ve geçmişi (username bazlı)
 const userStats = new Map(); // username -> { roomsJoined, messagesSent, totalTime, favoriteRooms, lastSeen }
@@ -98,7 +116,19 @@ io.on('connection', (socket) => {
       }
     });
 
-    const userRole = adminUsers.has(username?.toUpperCase()) ? 'admin' : 'host';
+    // Kullanıcı rolünü belirle
+    // 1. Önce database'den kontrol et (ileride eklenebilir)
+    // 2. Sonra environment variable'dan kontrol et
+    // 3. Son olarak default 'host' rolü
+    let userRole = 'host';
+    if (username) {
+      const dbRole = await getUserRoleFromDB(username);
+      if (dbRole) {
+        userRole = dbRole;
+      } else if (adminUsers.has(username.toUpperCase())) {
+        userRole = 'admin';
+      }
+    }
     
     users.set(socket.id, {
       id: socket.id,
@@ -193,7 +223,16 @@ io.on('connection', (socket) => {
 
     room.users.add(socket.id);
 
-    const userRole = adminUsers.has(username?.toUpperCase()) ? 'admin' : 'user';
+    // Kullanıcı rolünü belirle
+    let userRole = 'user';
+    if (username) {
+      const dbRole = await getUserRoleFromDB(username);
+      if (dbRole) {
+        userRole = dbRole;
+      } else if (adminUsers.has(username.toUpperCase())) {
+        userRole = 'admin';
+      }
+    }
     
     users.set(socket.id, {
       id: socket.id,

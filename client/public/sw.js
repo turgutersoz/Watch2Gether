@@ -60,6 +60,23 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Skip unsupported schemes (chrome-extension, moz-extension, data, blob, etc.)
+  const unsupportedSchemes = ['chrome-extension:', 'moz-extension:', 'data:', 'blob:', 'file:'];
+  if (unsupportedSchemes.some(scheme => url.protocol.startsWith(scheme))) {
+    return; // Let the browser handle these requests normally
+  }
+
+  // Only cache http/https requests
+  const isCacheableScheme = url.protocol === 'http:' || url.protocol === 'https:';
+  
+  // Skip external domains that might not be cacheable (optional - for Cloudflare, analytics, etc.)
+  const skipExternalDomains = [
+    'static.cloudflareinsights.com',
+    'www.google-analytics.com',
+    'www.googletagmanager.com'
+  ];
+  const shouldSkipExternal = skipExternalDomains.some(domain => url.hostname.includes(domain));
+
   // Cache strategy: Network first, fallback to cache
   event.respondWith(
     fetch(request)
@@ -67,10 +84,13 @@ self.addEventListener('fetch', (event) => {
         // Clone the response
         const responseToCache = response.clone();
 
-        // Cache successful responses
-        if (response.status === 200) {
+        // Cache successful responses (only for cacheable schemes and not external domains)
+        if (response.status === 200 && isCacheableScheme && !shouldSkipExternal) {
           caches.open(RUNTIME_CACHE).then((cache) => {
-            cache.put(request, responseToCache);
+            cache.put(request, responseToCache).catch((error) => {
+              // Silently fail if cache.put fails (e.g., for unsupported schemes)
+              console.warn('Cache put failed:', error);
+            });
           });
         }
 

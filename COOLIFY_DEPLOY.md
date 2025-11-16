@@ -350,6 +350,11 @@ Coolify'ın native deployment özelliğini kullanarak her servisi ayrı ayrı de
    # veya belirli domain'ler için:
    # CORS_ORIGINS=https://your-client-domain.com,https://your-server-domain.com
    # ⚠️ ÖNEMLİ: "*" tüm origin'lere izin verir (development için uygun, production'da belirli domain'ler kullanın)
+   
+   # Admin Users (virgülle ayrılmış liste, büyük/küçük harf duyarsız)
+   ADMIN_USERS=admin,ADMIN,superadmin
+   # Örnek: ADMIN_USERS=admin,ADMIN,superadmin
+   # Not: Bu kullanıcı adları otomatik olarak 'admin' rolü alır
    ```
 
 #### Adım 4: Domain ve SSL Yapılandırması
@@ -482,6 +487,55 @@ Deploy edildikten sonra:
    POSTGRES_PASSWORD=your-password
    POSTGRES_DATABASE=watch_together
    ```
+
+⚠️ **ÖNEMLİ:** Coolify'da PostgreSQL **sadece internal network'te** çalışır. Dışarıdan (örneğin local bilgisayarınızdan) bağlanmak için:
+
+**Yöntem 1: Port Forwarding (SSH Tunnel - Önerilen)**
+
+1. Sunucuya SSH ile bağlanın:
+   ```bash
+   ssh root@YOUR_SERVER_IP
+   ```
+
+2. PostgreSQL container'ının port'unu local'e forward edin:
+   ```bash
+   # Sunucuda (yeni terminal)
+   docker port watch-together-db
+   # veya container ID'yi bulun
+   docker ps | grep postgres
+   ```
+
+3. Local bilgisayarınızda SSH tunnel oluşturun:
+   ```bash
+   ssh -L 5432:localhost:5432 root@YOUR_SERVER_IP
+   ```
+
+4. Artık local'den bağlanabilirsiniz:
+   ```bash
+   psql -h localhost -p 5432 -U watchtogether -d watch_together
+   ```
+
+**Yöntem 2: Coolify Port Mapping (Dışarıdan Erişim)**
+
+1. Coolify Dashboard'da PostgreSQL servisine gidin
+2. **"Settings"** > **"Ports"** sekmesine tıklayın
+3. **"Add Port Mapping"** butonuna tıklayın
+4. **"Host Port"**: `5432` (veya başka bir port)
+5. **"Container Port"**: `5432`
+6. **"Save"** butonuna tıklayın
+7. Artık `YOUR_SERVER_IP:5432` üzerinden bağlanabilirsiniz
+
+⚠️ **Güvenlik Uyarısı:** Port mapping yaparsanız:
+- Firewall'da sadece güvenilir IP'lere izin verin
+- Güçlü şifre kullanın
+- Production'da önerilmez (SSH tunnel daha güvenli)
+
+**Yöntem 3: Coolify SQL Editor (En Kolay)**
+
+1. Database servisine gidin
+2. **"Execute SQL"** veya **"SQL Editor"** sekmesine tıklayın
+3. SQL sorgularınızı direkt çalıştırın
+4. Dışarıdan bağlantı gerekmez
 
 #### Adım 3: Schema Oluşturma
 

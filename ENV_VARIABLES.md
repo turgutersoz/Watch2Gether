@@ -223,6 +223,11 @@ MYSQL_DATABASE=watch_together
 PORT=3001
 NODE_ENV=production
 CORS_ORIGINS=https://yourdomain.com,https://api.yourdomain.com
+
+# Admin Users (virgülle ayrılmış liste, büyük/küçük harf duyarsız)
+ADMIN_USERS=admin,ADMIN,superadmin
+# Örnek: ADMIN_USERS=admin,ADMIN,superadmin
+# Not: Bu kullanıcı adları otomatik olarak 'admin' rolü alır
 ```
 
 ### Production (Docker Compose)
